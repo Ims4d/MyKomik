@@ -42,11 +42,7 @@
                                 <div class="col-md-3 mb-3 text-center">
                                     <img src="{{ $page->image_url }}" alt="Page {{ $page->page_number }}" class="img-thumbnail mb-2" style="max-height: 150px;">
                                     <p class="mb-1"><small>Page {{ $page->page_number }}</small></p>
-                                    <form action="{{ route('dashboard.pages.destroy', $page->page_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this page?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
-                                    </form>
+                                    <button type="button" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
                                 </div>
                             @endforeach
                         </div>

@@ -2,10 +2,14 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Dashboard\DashboardController;
-use App\Http\Controllers\Dashboard\ComicController;
-use App\Http\Controllers\Dashboard\ChapterController;
+use App\Http\Controllers\Dashboard\ComicController as DashboardComicController;
+use App\Http\Controllers\Dashboard\ChapterManagementController;
+use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\Dashboard\UserController;
 use App\Http\Controllers\Dashboard\GenreController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\RatingController; // Added
+use App\Http\Controllers\CommentController; // Added
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,9 +24,14 @@ Route::get('/', function () {
 });
 
 // Home page (for regular users after login)
-Route::get('/home', function () {
-    return view('home');
-})->middleware('auth')->name('home');
+Route::get('/home', [HomeController::class, 'index'])->name('home')->middleware('auth'); // Moved middleware
+
+// Public comic routes (protected by auth middleware)
+Route::middleware('auth')->group(function () {
+    Route::get('/comics/{comic}', [\App\Http\Controllers\ComicController::class, 'show'])->name('comics.show');
+    Route::post('/comics/{comic}/rate', [RatingController::class, 'store'])->name('comics.rate');
+    Route::post('/comics/{comic}/comments', [CommentController::class, 'store'])->name('comics.comments.store'); // Added
+});
 
 // Profile routes (protected by auth middleware)
 Route::middleware('auth')->group(function () {
@@ -49,20 +58,25 @@ Route::middleware(['auth', 'admin'])->prefix('dashboard')->name('dashboard.')->g
     Route::get('/', [DashboardController::class, 'index'])->name('index');
     
     // Comics management
-    Route::resource('comics', ComicController::class);
+    Route::resource('comics', DashboardComicController::class);
     
     // Chapters management (nested under comics)
-    Route::get('comics/{comic}/chapters', [ChapterController::class, 'index'])->name('chapters.index');
-    Route::get('comics/{comic}/chapters/create', [ChapterController::class, 'create'])->name('chapters.create');
-    Route::post('comics/{comic}/chapters', [ChapterController::class, 'store'])->name('chapters.store');
-    Route::get('comics/{comic}/chapters/{chapter}/edit', [ChapterController::class, 'edit'])->name('chapters.edit');
-    Route::put('comics/{comic}/chapters/{chapter}', [ChapterController::class, 'update'])->name('chapters.update');
-    Route::delete('comics/{comic}/chapters/{chapter}', [ChapterController::class, 'destroy'])->name('chapters.destroy');
-    Route::delete('pages/{page}', [ChapterController::class, 'deletePage'])->name('pages.destroy');
+    Route::get('comics/{comic}/chapters', [ChapterManagementController::class, 'index'])->name('chapters.index');
+    Route::get('comics/{comic}/chapters/create', [ChapterManagementController::class, 'create'])->name('chapters.create');
+    Route::post('comics/{comic}/chapters', [ChapterManagementController::class, 'store'])->name('chapters.store');
+    Route::get('comics/{comic}/chapters/{chapter}/edit', [ChapterManagementController::class, 'edit'])->name('chapters.edit');
+    Route::put('comics/{comic}/chapters/{chapter}', [ChapterManagementController::class, 'update'])->name('chapters.update');
+    Route::delete('comics/{comic}/chapters/{chapter}', [ChapterManagementController::class, 'destroy'])->name('chapters.destroy');
+    Route::delete('pages/{page}', [ChapterManagementController::class, 'deletePage'])->name('pages.destroy');
     
     // Users management
     Route::resource('users', UserController::class);
     
     // Genres management
     Route::resource('genres', GenreController::class)->except(['show']);
+});
+
+// Public chapter route (protected by auth middleware)
+Route::middleware('auth')->group(function () {
+    Route::get('/comics/{comic}/chapters/{chapter}', [\App\Http\Controllers\ChapterController::class, 'show'])->name('chapters.show');
 });
