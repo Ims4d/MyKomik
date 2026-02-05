@@ -1,144 +1,99 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Comic Reader</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .login-container {
-            max-width: 450px;
-            width: 100%;
-        }
-        .login-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            overflow: hidden;
-        }
-        .login-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 30px;
-            text-align: center;
-            color: white;
-        }
-        .login-header i {
-            font-size: 50px;
-            margin-bottom: 10px;
-        }
-        .login-body {
-            padding: 40px;
-        }
-        .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-        .btn-login {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            padding: 12px;
-            font-weight: bold;
-            transition: transform 0.3s ease;
-        }
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-    </style>
-</head>
-<body>
-    <div class="login-container">
-        <div class="login-card">
-            <div class="login-header">
-                <i class="fas fa-book-open"></i>
-                <h3 class="mb-0">Comic Reader</h3>
-                <p class="mb-0 mt-2">Sign in to continue</p>
+@extends('layouts.app')
+
+@section('title', 'Masuk ke MyKomik')
+
+@section('content')
+<div class="flex items-center justify-center min-h-[calc(100vh-128px)] px-4 py-12 sm:px-6 lg:px-8">
+    <div class="w-full max-w-md">
+        <div class="bg-neutral-800 rounded-xl shadow-lg border border-neutral-700">
+            <div class="p-8 text-center border-b border-neutral-700">
+                <a href="{{ route('home') }}" class="inline-block text-sky-500 hover:text-sky-400 transition">
+                    <i class="fas fa-book-open fa-3x"></i>
+                </a>
+                <h2 class="mt-4 text-2xl font-bold text-white">
+                    Masuk ke Akun Anda
+                </h2>
+                <p class="mt-2 text-sm text-neutral-400">
+                    Selamat datang kembali!
+                </p>
             </div>
-            
-            <div class="login-body">
+
+            <div class="p-8">
                 @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle"></i> {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <div class="mb-4 bg-green-500/10 border-l-4 border-green-500 text-green-300 px-4 py-3 rounded-lg" role="alert">
+                        <p class="text-sm">{{ session('success') }}</p>
                     </div>
                 @endif
 
                 @if($errors->any())
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-circle"></i> {{ $errors->first() }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <div class="mb-4 bg-red-500/10 border-l-4 border-red-500 text-red-300 px-4 py-3 rounded-lg" role="alert">
+                        <p class="text-sm">{{ $errors->first() }}</p>
                     </div>
                 @endif
 
-                <form action="{{ route('login') }}" method="POST">
+                <form action="{{ route('login') }}" method="POST" class="space-y-6">
                     @csrf
                     
-                    <div class="mb-3">
-                        <label for="username" class="form-label">
-                            <i class="fas fa-user"></i> Username
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-neutral-300 mb-1">
+                            Username
                         </label>
-                        <input type="text" 
-                               class="form-control @error('username') is-invalid @enderror" 
-                               id="username" 
-                               name="username" 
-                               value="{{ old('username') }}" 
-                               placeholder="Enter your username"
-                               required 
-                               autofocus>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                                <i class="fas fa-user text-neutral-400"></i>
+                            </span>
+                            <input type="text" 
+                                   class="block w-full pl-10 pr-4 py-2 rounded-lg border-neutral-600 bg-neutral-700 text-white shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm placeholder-neutral-400 @error('username') border-red-500 @enderror" 
+                                   id="username" 
+                                   name="username" 
+                                   value="{{ old('username') }}" 
+                                   placeholder="Masukkan username Anda"
+                                   required 
+                                   autofocus>
+                        </div>
                         @error('username')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <p class="mt-2 text-sm text-red-400">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <div class="mb-4">
-                        <label for="password" class="form-label">
-                            <i class="fas fa-lock"></i> Password
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-neutral-300 mb-1">
+                            Password
                         </label>
-                        <input type="password" 
-                               class="form-control @error('password') is-invalid @enderror" 
-                               id="password" 
-                               name="password" 
-                               placeholder="Enter your password"
-                               required>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                                <i class="fas fa-lock text-neutral-400"></i>
+                            </span>
+                            <input type="password" 
+                                   class="block w-full pl-10 pr-4 py-2 rounded-lg border-neutral-600 bg-neutral-700 text-white shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm placeholder-neutral-400 @error('password') border-red-500 @enderror" 
+                                   id="password" 
+                                   name="password" 
+                                   placeholder="Masukkan password Anda"
+                                   required>
+                        </div>
                         @error('password')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <p class="mt-2 text-sm text-red-400">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100 btn-login">
-                        <i class="fas fa-sign-in-alt"></i> Login
-                    </button>
+                    <div>
+                        <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 focus:ring-offset-neutral-800 transition duration-300">
+                            <i class="fas fa-sign-in-alt mr-2"></i>
+                            Masuk
+                        </button>
+                    </div>
                 </form>
 
-                <div class="text-center mt-3">
-                    <small class="text-muted">
-                        Don't have an account? <a href="{{ route('register') }}" class="text-decoration-none fw-bold">Register here</a>
-                    </small>
+                <div class="text-center mt-6">
+                    <p class="text-sm text-neutral-400">
+                        Belum punya akun?
+                        <a href="{{ route('register') }}" class="font-medium text-sky-400 hover:text-sky-300">
+                            Daftar di sini
+                        </a>
+                    </p>
                 </div>
             </div>
         </div>
-
-        <div class="text-center mt-3">
-            <small class="text-white">
-                &copy; {{ date('Y') }} Comic Reader. All rights reserved.
-            </small>
-        </div>
     </div>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+</div>
+@endsection

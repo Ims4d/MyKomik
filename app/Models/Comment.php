@@ -14,7 +14,6 @@ class Comment extends Model
     protected $fillable = [
         'user_id',
         'chapter_id',
-        'comic_id', // Added
         'parent_comment_id',
         'comment_text',
     ];
@@ -28,11 +27,6 @@ class Comment extends Model
     public function chapter()
     {
         return $this->belongsTo(Chapter::class, 'chapter_id', 'chapter_id');
-    }
-
-    public function comic() // Added
-    {
-        return $this->belongsTo(Comic::class, 'comic_id', 'comic_id');
     }
 
     // Self-referencing for nested comments

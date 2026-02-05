@@ -10,34 +10,35 @@ use Illuminate\Support\Facades\Auth;
 class RatingController extends Controller
 {
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Comic  $comic
-     * @return \Illuminate\Http\Response
+     * Rate a comic
      */
-    public function store(Request $request, Comic $comic)
+    public function rate(Request $request, $comicId)
     {
-        $request->validate([
-            'rating' => 'required|integer|min:1|max:5',
+        $validated = $request->validate([
+            "rating" => "required|integer|min:1|max:5",
         ]);
 
-        $query = Rating::where('user_id', Auth::id())
-                       ->where('comic_id', $comic->comic_id);
+        $comic = Comic::findOrFail($comicId);
 
-        $rating = $query->first();
+        // Create or update rating
+        Rating::updateOrCreate(
+            [
+                "user_id" => Auth::id(),
+                "comic_id" => $comicId,
+            ],
+            [
+                "rating_value" => $validated["rating"],
+            ],
+        );
 
-        if ($rating) {
-            // Use update on the query builder for composite primary keys
-            $query->update(['rating_value' => $request->rating]);
-        } else {
-            Rating::create([
-                'user_id' => Auth::id(),
-                'comic_id' => $comic->comic_id,
-                'rating_value' => $request->rating,
-            ]);
-        }
+        // Recalculate and format the new average rating
+        $newAverage = number_format($comic->averageRating(), 1);
 
-        return redirect()->route('comics.show', $comic->comic_id)->with('success', 'Rating submitted successfully!');
+        return response()->json([
+            "success" => true,
+            "message" => "Rating submitted successfully!",
+            "new_average_rating" => $newAverage,
+            "total_ratings" => $comic->totalRatings(),
+        ]);
     }
 }

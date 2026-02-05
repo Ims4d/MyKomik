@@ -21,6 +21,10 @@ class Comic extends Model
 
     public $timestamps = false;
 
+    protected $casts = [
+        'created_at' => 'datetime',
+    ];
+
     // Relationships
     public function chapters()
     {
@@ -48,26 +52,6 @@ class Comic extends Model
     public function ratings()
     {
         return $this->hasMany(Rating::class, 'comic_id', 'comic_id');
-    }
-
-    public function comments()
-    {
-        // This relationship will now fetch comments directly related to the comic
-        // and not associated with a specific chapter.
-        return $this->hasMany(Comment::class, 'comic_id', 'comic_id')
-                    ->whereNull('chapter_id');
-    }
-
-    public function chapterComments() // New relationship for comments on chapters
-    {
-        return $this->hasManyThrough(
-            Comment::class,
-            Chapter::class,
-            'comic_id', // Foreign key on the chapters table
-            'chapter_id', // Foreign key on the comments table
-            'comic_id', // Local key on the comics table
-            'chapter_id' // Local key on the chapters table
-        );
     }
 
     // Helper methods

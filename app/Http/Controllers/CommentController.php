@@ -2,32 +2,54 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Comic;
 use App\Models\Comment;
+use App\Models\Chapter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class CommentController extends Controller
 {
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Comic  $comic
-     * @return \Illuminate\Http\Response
+     * Store a new comment
      */
-    public function store(Request $request, Comic $comic)
+    public function store(Request $request, $comicId)
     {
-        $request->validate([
-            'body' => 'required|string|max:1000', // Assuming 'body' is the name from the textarea
+        $validated = $request->validate([
+            "chapter_id" => "required|exists:chapters,chapter_id",
+            "comment_text" => "required|string|max:1000",
+            "parent_comment_id" => "nullable|exists:comments,comment_id",
         ]);
 
         $comment = Comment::create([
-            'user_id' => Auth::id(),
-            'comic_id' => $comic->comic_id,
-            'comment_text' => $request->body, // Assuming 'body' maps to 'comment_text'
+            "user_id" => Auth::id(),
+            "chapter_id" => $validated["chapter_id"],
+            "parent_comment_id" => $validated["parent_comment_id"] ?? null,
+            "comment_text" => $validated["comment_text"],
         ]);
 
-        return redirect()->route('comics.show', $comic->comic_id)->with('success', 'Comment posted successfully!');
+        return back()->with("success", "Comment posted successfully!");
+    }
+
+    /**
+     * Delete a comment
+     */
+    public function destroy($comicId, $commentId)
+    {
+        $comment = Comment::findOrFail($commentId);
+
+        // Check if user owns the comment or is admin
+        if (
+            $comment->user_id !== Auth::id() &&
+            Auth::user()->role !== "admin"
+        ) {
+            return back()->with(
+                "error",
+                "You can only delete your own comments.",
+            );
+        }
+
+        $comment->delete();
+
+        return back()->with("success", "Comment deleted successfully!");
     }
 }

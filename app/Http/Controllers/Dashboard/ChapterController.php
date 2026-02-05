@@ -9,7 +9,7 @@ use App\Models\Page;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-class ChapterManagementController extends Controller
+class ChapterController extends Controller
 {
     /**
      * Display chapters for a specific comic

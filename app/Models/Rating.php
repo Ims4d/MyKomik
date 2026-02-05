@@ -28,4 +28,25 @@ class Rating extends Model
     {
         return $this->belongsTo(Comic::class, 'comic_id', 'comic_id');
     }
+
+    /**
+     * Set the keys for a save update query.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    protected function setKeysForSaveQuery($query)
+    {
+        $keys = $this->getKeyName();
+
+        if (!is_array($keys)) {
+            return parent::setKeysForSaveQuery($query);
+        }
+
+        foreach ($keys as $key) {
+            $query->where($key, $this->getAttribute($key));
+        }
+
+        return $query;
+    }
 }
