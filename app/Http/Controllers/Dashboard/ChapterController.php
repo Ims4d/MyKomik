@@ -7,7 +7,9 @@ use App\Models\Chapter;
 use App\Models\Comic;
 use App\Models\Page;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ChapterController extends Controller
 {
@@ -36,7 +38,7 @@ class ChapterController extends Controller
             ->orderBy('chapter_number', 'desc')
             ->first();
         
-        $nextChapterNumber = $lastChapter ? $lastChapter->chapter_number + 1 : 1;
+        $nextChapterNumber = $lastChapter ? floor($lastChapter->chapter_number) + 1 : 1;
 
         return view('dashboard.chapters.create', compact('comic', 'nextChapterNumber'));
     }
@@ -47,39 +49,83 @@ class ChapterController extends Controller
     public function store(Request $request, $comicId)
     {
         $validated = $request->validate([
-            'chapter_number' => 'required|integer|min:1',
+            'chapter_number' => 'required|numeric|min:0',
             'title' => 'nullable|string|max:255',
             'release_date' => 'nullable|date',
-            'pages' => 'required|array|min:1',
-            'pages.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max per image
+            'upload_id' => 'required|string',
         ]);
+
+        $comic = Comic::findOrFail($comicId);
+        $tempDir = 'temp_uploads/' . $validated['upload_id'];
+
+        if (!Storage::disk('private')->exists($tempDir)) {
+            return back()->with('error', 'Upload session expired or invalid. Please upload pages again.');
+        }
 
         // Create chapter
         $chapter = Chapter::create([
-            'comic_id' => $comicId,
+            'comic_id' => $comic->comic_id,
             'chapter_number' => $validated['chapter_number'],
             'title' => $validated['title'] ?? null,
             'release_date' => $validated['release_date'] ?? now(),
         ]);
 
-        // Upload pages
-        if ($request->hasFile('pages')) {
-            foreach ($request->file('pages') as $index => $file) {
-                $pageNumber = $index + 1;
-                $filename = "page_{$pageNumber}_" . time() . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs("comics/pages/{$comicId}/{$chapter->chapter_id}", $filename, 'public');
+        // Process uploaded pages from temp storage
+        $files = Storage::disk('private')->files($tempDir);
+        
+        // Sort files alphanumerically
+        natsort($files);
+        
+        $pageCount = 0;
+        foreach ($files as $index => $tempPath) {
+            $pageNumber = $index + 1;
+            $fileContents = Storage::disk('private')->get($tempPath);
+            $originalName = pathinfo($tempPath, PATHINFO_BASENAME);
+            $extension = pathinfo($tempPath, PATHINFO_EXTENSION);
+            
+            $newFilename = "page_{$pageNumber}_" . Str::slug($comic->title) . '_' . $chapter->chapter_id . '.' . $extension;
+            $newPath = "comics/{$comic->comic_id}/chapters/{$chapter->chapter_id}/{$newFilename}";
 
-                Page::create([
-                    'comic_id' => $comicId,
-                    'chapter_id' => $chapter->chapter_id,
-                    'page_number' => $pageNumber,
-                    'image_url' => '/storage/' . $path,
-                ]);
-            }
+            Storage::disk('public')->put($newPath, $fileContents);
+
+            Page::create([
+                'comic_id' => $comic->comic_id,
+                'chapter_id' => $chapter->chapter_id,
+                'page_number' => $pageNumber,
+                'image_url' => Storage::url($newPath),
+            ]);
+            $pageCount++;
         }
 
+        // Clean up temp directory
+        Storage::disk('private')->deleteDirectory($tempDir);
+
         return redirect()->route('dashboard.chapters.index', $comicId)
-            ->with('success', 'Chapter created successfully with ' . count($request->file('pages')) . ' pages!');
+            ->with('success', "Chapter created successfully with {$pageCount} pages!");
+    }
+
+
+    /**
+     * Handle chunked file uploads for pages
+     */
+    public function uploadChunk(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'upload_id' => 'required|string',
+            'page' => 'required|file|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max per image
+            'filename' => 'required|string',
+        ]);
+
+        $uploadId = $validated['upload_id'];
+        $file = $validated['page'];
+        $filename = $validated['filename'];
+        
+        $tempDir = 'temp_uploads/' . $uploadId;
+
+        // Store the file in a temporary directory
+        $file->storeAs($tempDir, $filename, 'private');
+
+        return response()->json(['success' => true]);
     }
 
     /**
@@ -101,11 +147,10 @@ class ChapterController extends Controller
         $chapter = Chapter::findOrFail($chapterId);
 
         $validated = $request->validate([
-            'chapter_number' => 'required|integer|min:1',
+            'chapter_number' => 'required|numeric|min:0',
             'title' => 'nullable|string|max:255',
             'release_date' => 'nullable|date',
-            'new_pages' => 'nullable|array',
-            'new_pages.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120',
+            'upload_id' => 'nullable|string', // upload_id is for new pages
         ]);
 
         $chapter->update([
@@ -114,25 +159,35 @@ class ChapterController extends Controller
             'release_date' => $validated['release_date'] ?? $chapter->release_date,
         ]);
 
-        // Add new pages if uploaded
-        if ($request->hasFile('new_pages')) {
-            $lastPage = Page::where('chapter_id', $chapterId)
-                ->orderBy('page_number', 'desc')
-                ->first();
-            
-            $startPageNumber = $lastPage ? $lastPage->page_number + 1 : 1;
+        // Append new pages if an upload_id is present
+        if (!empty($validated['upload_id'])) {
+            $tempDir = 'temp_uploads/' . $validated['upload_id'];
+            if (Storage::disk('private')->exists($tempDir)) {
+                $files = Storage::disk('private')->files($tempDir);
+                natsort($files);
 
-            foreach ($request->file('new_pages') as $index => $file) {
-                $pageNumber = $startPageNumber + $index;
-                $filename = "page_{$pageNumber}_" . time() . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs("comics/pages/{$comicId}/{$chapterId}", $filename, 'public');
+                // Use max() for a more robust way to find the last page number
+                $lastPageNumber = $chapter->pages()->max('page_number');
+                $startPageNumber = $lastPageNumber ? $lastPageNumber + 1 : 1;
+                
+                foreach ($files as $index => $tempPath) {
+                    $pageNumber = $startPageNumber + $index;
+                    $fileContents = Storage::disk('private')->get($tempPath);
+                    $extension = pathinfo($tempPath, PATHINFO_EXTENSION);
+                    
+                    $newFilename = "page_{$pageNumber}_" . Str::slug($comicId) . '_' . $chapterId . '.' . $extension;
+                    $newPath = "comics/{$comicId}/chapters/{$chapterId}/{$newFilename}";
 
-                Page::create([
-                    'comic_id' => $comicId,
-                    'chapter_id' => $chapterId,
-                    'page_number' => $pageNumber,
-                    'image_url' => '/storage/' . $path,
-                ]);
+                    Storage::disk('public')->put($newPath, $fileContents);
+
+                    Page::create([
+                        'comic_id' => $comicId,
+                        'chapter_id' => $chapterId,
+                        'page_number' => $pageNumber,
+                        'image_url' => Storage::url($newPath),
+                    ]);
+                }
+                Storage::disk('private')->deleteDirectory($tempDir);
             }
         }
 
@@ -140,43 +195,48 @@ class ChapterController extends Controller
             ->with('success', 'Chapter updated successfully!');
     }
 
+
     /**
      * Remove the specified chapter
      */
     public function destroy($comicId, $chapterId)
     {
         $chapter = Chapter::findOrFail($chapterId);
+        $comic = Comic::findOrFail($comicId);
 
-        // Delete all page images
-        $pages = Page::where('chapter_id', $chapterId)->get();
-        foreach ($pages as $page) {
-            if ($page->image_url) {
-                $path = str_replace('/storage/', '', $page->image_url);
-                Storage::disk('public')->delete($path);
-            }
-        }
-
+        // Delete the entire chapter directory from public storage
+        $chapterDirectory = "comics/{$comic->comic_id}/chapters/{$chapter->chapter_id}";
+        Storage::disk('public')->deleteDirectory($chapterDirectory);
+        
+        // The pages will be deleted from db via cascading delete constraint
         $chapter->delete();
 
         return redirect()->route('dashboard.chapters.index', $comicId)
-            ->with('success', 'Chapter deleted successfully!');
+            ->with('success', 'Chapter and all its pages deleted successfully!');
     }
 
     /**
      * Delete a single page
      */
-    public function deletePage($pageId)
+    public function deletePage($pageId): JsonResponse
     {
-        $page = Page::findOrFail($pageId);
-        
-        // Delete image file
-        if ($page->image_url) {
-            $path = str_replace('/storage/', '', $page->image_url);
-            Storage::disk('public')->delete($path);
+        try {
+            $page = Page::findOrFail($pageId);
+            
+            // Delete image file from public storage
+            if ($page->image_url) {
+                $path = str_replace(Storage::url(''), '', $page->image_url);
+                Storage::disk('public')->delete($path);
+            }
+
+            $page->delete();
+
+            // Optionally, re-order subsequent pages
+            // For now, we'll just delete it. Re-ordering can be a separate feature.
+
+            return response()->json(['success' => true, 'message' => 'Page deleted successfully!']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
-
-        $page->delete();
-
-        return back()->with('success', 'Page deleted successfully!');
     }
 }

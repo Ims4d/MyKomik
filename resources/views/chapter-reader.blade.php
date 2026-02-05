@@ -4,14 +4,13 @@
 
 @push('styles')
 <style>
-    /* Hide the default app header and footer for a more immersive reading experience */
     body > nav.top-0,
     body > footer {
         display: none;
     }
     main.grow {
         padding-top: 0;
-        margin-top: -1.5rem; /* Adjust based on your layout's padding */
+        margin-top: -1.5rem;
     }
 </style>
 @endpush
@@ -58,9 +57,9 @@
                 <div class="flex">
                     <div class="py-1"><i class="fas fa-info-circle fa-lg text-blue-500 mr-3"></i></div>
                     <div>
-                        <p class="font-bold">You are reading as a guest.</p>
+                        <p class="font-bold">Kamu membaca sebagai guest.</p>
                         <p class="text-sm">
-                            <a href="{{ route('login') }}" class="font-semibold underline hover:text-blue-200">Log in</a> or <a href="{{ route('register') }}" class="font-semibold underline hover:text-blue-200">create an account</a> to save your reading progress.
+                            <a href="{{ route('login') }}" class="font-semibold underline hover:text-blue-200">Log in</a> atau <a href="{{ route('register') }}" class="font-semibold underline hover:text-blue-200">buat akun</a> untuk menyimpan progres.
                         </p>
                     </div>
                 </div>
@@ -83,8 +82,8 @@
             @empty
                 <div class="text-center py-24 bg-neutral-800 rounded-lg">
                     <i class="fas fa-images fa-4x text-neutral-600 mb-4"></i>
-                    <h3 class="text-xl font-bold text-neutral-300">No Pages Yet</h3>
-                    <p class="text-neutral-500 mt-2">The pages for this chapter have not been uploaded.</p>
+                    <h3 class="text-xl font-bold text-neutral-300">No Pages Yet :(</h3>
+                    <p class="text-neutral-500 mt-2">The pages for this chapter have not been uploaded. uhh</p>
                 </div>
             @endforelse
         </div>
@@ -103,7 +102,7 @@
                         <span>Prev</span>
                     </span>
                 @endif
-                
+
                 <a href="{{ route('comic.show', $comic->comic_id) }}" class="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-neutral-300 font-medium rounded-lg transition">
                     All Chapters
                 </a>
@@ -122,9 +121,9 @@
             </div>
             <p class="text-center text-sm text-neutral-500 mt-4">
                 @if($nextChapter)
-                    You've finished Chapter {{ $chapter->chapter_number }}. Continue to Chapter {{ $nextChapter->chapter_number }}.
+                    Kamu telah selesai membaca chapter {{ $chapter->chapter_number }}. Lanjut ke chapter {{ $nextChapter->chapter_number }}.
                 @else
-                    You've read the latest chapter.
+                    Kamu telah membaca chapter terakhir.
                 @endif
             </p>
         </div>
@@ -135,9 +134,11 @@
         <div class="px-4 py-2">
             <label for="imageWidth" class="block text-sm font-medium text-neutral-300 mb-1">Image Width</label>
             <select id="imageWidth" onchange="changeImageWidth(this.value)" class="w-full px-3 py-2 rounded-lg border-neutral-600 bg-neutral-700 text-white shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm">
-                <option value="100%">Fit to Width</option>
+                <option value="default">Default</option>
+                <option value="70%">70%</option>
                 <option value="80%">80%</option>
                 <option value="90%">90%</option>
+                <option value="100%">100% (Fit)</option>
                 <option value="110%">110%</option>
                 <option value="120%">120%</option>
             </select>
@@ -173,8 +174,14 @@
     function changeImageWidth(width) {
         const images = document.querySelectorAll('#pagesContainer img');
         images.forEach(img => {
-            img.style.width = width;
-            img.style.maxWidth = width === '100%' ? 'none' : '4xl';
+            if (width === 'default') {
+                img.style.width = '';
+                img.style.maxWidth = '';
+            } else {
+                img.style.width = width;
+                const percent = parseInt(width);
+                img.style.maxWidth = percent > 100 ? 'none' : '100%';
+            }
         });
         localStorage.setItem('imageWidth', width);
     }
@@ -190,12 +197,12 @@
     // --- Event Listeners ---
     // Load saved settings
     window.addEventListener('load', function() {
-        const savedWidth = localStorage.getItem('imageWidth') || '100%';
+        const savedWidth = localStorage.getItem('imageWidth') || 'default';
         const savedAutoHide = localStorage.getItem('autoHide') || 'true';
 
         document.getElementById('imageWidth').value = savedWidth;
         document.getElementById('autoHide').value = savedAutoHide;
-        
+
         changeImageWidth(savedWidth);
         changeAutoHide(savedAutoHide);
     });
@@ -243,4 +250,3 @@
     });
 </script>
 @endpush
-

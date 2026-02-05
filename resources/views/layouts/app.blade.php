@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" class="dark">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,7 +19,6 @@
                 <!-- Logo & Brand -->
                 <div class="flex items-center">
                     <a href="{{ route('home') }}" class="flex items-center gap-2 text-xl font-bold text-sky-500 hover:text-sky-400 transition">
-                        <i class="fas fa-book-open"></i>
                         <span>MyKomik</span>
                     </a>
                 </div>

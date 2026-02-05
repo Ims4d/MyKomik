@@ -64,7 +64,7 @@
                             <p class="mt-1 text-neutral-200">{{ $user->display_name ?? '-' }}</p>
                         </div>
                         <div>
-                            <label class="text-sm font-semibold text-neutral-400 uppercase tracking-wider">Tanggal Bergabung</label>
+                            <label class="text-sm font-semibold text-neutral-400 uppercase tracking-wider">Bergabung</label>
                             <p class="mt-1 text-neutral-200 flex items-center gap-2">
                                 <i class="far fa-calendar text-neutral-500"></i>
                                 {{ $user->created_at->format('d F Y') }} ({{ $user->created_at->diffForHumans() }})

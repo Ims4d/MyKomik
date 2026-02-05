@@ -7,10 +7,7 @@
     <div class="w-full max-w-lg">
         <div class="bg-neutral-800 rounded-xl shadow-lg border border-neutral-700">
             <div class="p-8 text-center border-b border-neutral-700">
-                <a href="{{ route('home') }}" class="inline-block text-sky-500 hover:text-sky-400 transition">
-                    <i class="fas fa-user-plus fa-3x"></i>
-                </a>
-                <h2 class="mt-4 text-2xl font-bold text-white">
+                <h2 class="mt-2 text-2xl font-bold text-white">
                     Buat Akun Baru
                 </h2>
                 <p class="mt-2 text-sm text-neutral-400">
@@ -32,18 +29,18 @@
 
                 <form action="{{ route('register') }}" method="POST" class="space-y-5">
                     @csrf
-                    
+
                     <div>
                         <label for="username" class="block text-sm font-medium text-neutral-300 mb-1">
                             Username <span class="text-red-400">*</span>
                         </label>
-                        <input type="text" 
-                               class="block w-full px-4 py-2 rounded-lg border-neutral-600 bg-neutral-700 text-white shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm placeholder-neutral-400 @error('username') border-red-500 @enderror" 
-                               id="username" 
-                               name="username" 
-                               value="{{ old('username') }}" 
+                        <input type="text"
+                               class="block w-full px-4 py-2 rounded-lg border-neutral-600 bg-neutral-700 text-white shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm placeholder-neutral-400 @error('username') border-red-500 @enderror"
+                               id="username"
+                               name="username"
+                               value="{{ old('username') }}"
                                placeholder="Pilih username unik"
-                               required 
+                               required
                                autofocus>
                         <p class="mt-2 text-xs text-neutral-400">Hanya boleh huruf, angka, setrip, dan garis bawah.</p>
                     </div>
@@ -52,11 +49,11 @@
                         <label for="display_name" class="block text-sm font-medium text-neutral-300 mb-1">
                             Nama Tampilan
                         </label>
-                        <input type="text" 
-                               class="block w-full px-4 py-2 rounded-lg border-neutral-600 bg-neutral-700 text-white shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm placeholder-neutral-400 @error('display_name') border-red-500 @enderror" 
-                               id="display_name" 
-                               name="display_name" 
-                               value="{{ old('display_name') }}" 
+                        <input type="text"
+                               class="block w-full px-4 py-2 rounded-lg border-neutral-600 bg-neutral-700 text-white shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm placeholder-neutral-400 @error('display_name') border-red-500 @enderror"
+                               id="display_name"
+                               name="display_name"
+                               value="{{ old('display_name') }}"
                                placeholder="Nama yang akan dilihat pengguna lain (opsional)">
                     </div>
 
@@ -65,10 +62,10 @@
                             <label for="password" class="block text-sm font-medium text-neutral-300 mb-1">
                                 Password <span class="text-red-400">*</span>
                             </label>
-                            <input type="password" 
-                                   class="block w-full px-4 py-2 rounded-lg border-neutral-600 bg-neutral-700 text-white shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm placeholder-neutral-400 @error('password') border-red-500 @enderror" 
-                                   id="password" 
-                                   name="password" 
+                            <input type="password"
+                                   class="block w-full px-4 py-2 rounded-lg border-neutral-600 bg-neutral-700 text-white shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm placeholder-neutral-400 @error('password') border-red-500 @enderror"
+                                   id="password"
+                                   name="password"
                                    placeholder="Buat password yang kuat"
                                    required>
                             <p class="mt-2 text-xs text-neutral-400">Minimal 6 karakter, mengandung huruf dan angka.</p>
@@ -77,10 +74,10 @@
                             <label for="password_confirmation" class="block text-sm font-medium text-neutral-300 mb-1">
                                 Konfirmasi Password <span class="text-red-400">*</span>
                             </label>
-                            <input type="password" 
-                                   class="block w-full px-4 py-2 rounded-lg border-neutral-600 bg-neutral-700 text-white shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm placeholder-neutral-400" 
-                                   id="password_confirmation" 
-                                   name="password_confirmation" 
+                            <input type="password"
+                                   class="block w-full px-4 py-2 rounded-lg border-neutral-600 bg-neutral-700 text-white shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm placeholder-neutral-400"
+                                   id="password_confirmation"
+                                   name="password_confirmation"
                                    placeholder="Ulangi password"
                                    required>
                         </div>

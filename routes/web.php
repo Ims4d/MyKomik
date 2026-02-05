@@ -129,6 +129,10 @@ Route::middleware(["auth", "admin"])
             ChapterController::class,
             "update",
         ])->name("chapters.update");
+        Route::post("chapters/upload-chunk", [
+            ChapterController::class,
+            "uploadChunk",
+        ])->name("chapters.uploadChunk");
         Route::delete("comics/{comic}/chapters/{chapter}", [
             ChapterController::class,
             "destroy",

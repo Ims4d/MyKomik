@@ -66,9 +66,6 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <!-- Avatar Section -->
                     <div class="md:col-span-1 text-center">
-                         <label class="block text-sm font-medium text-neutral-300 mb-2">
-                            <i class="fas fa-image"></i> Avatar Profil
-                        </label>
                         <img src="{{ $user->getAvatarUrl() }}" alt="{{ $user->username }}" class="w-32 h-32 rounded-full object-cover mx-auto border-4 border-neutral-700 ring-2 ring-sky-500 shadow-lg" id="avatar-preview">
                         <div class="mt-4">
                             <label for="avatar" class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 border border-neutral-600 text-sm font-medium rounded-lg text-neutral-300 bg-neutral-700 hover:bg-neutral-600 transition">
